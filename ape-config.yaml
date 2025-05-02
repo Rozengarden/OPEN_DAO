@@ -1,0 +1,4 @@
+name: openvote
+
+plugins:
+  - name: ledger
