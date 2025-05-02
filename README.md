@@ -44,6 +44,4 @@ Why would u contribute to a vaporware, are u sane anon ?
 
 ## TODO
 
-- [ ] add --deploy flag to actualy trigger the deploy&progress logic (usefull when u test) 
-- [ ] switch `--use-account` to a `--no-account` flag and invert the logic (just 'cause am the dev doesn't mean I can do bad ux to save me a few keystrokes)
 - [ ] some logic to list & select the proposals if none provided

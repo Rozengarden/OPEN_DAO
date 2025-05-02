@@ -32,30 +32,24 @@ def test_proposal(DAO, payloads, description, tester):
     tx = DAO.propose([i["target"] for i in payloads], [i["value"] for i in payloads], [i["payload"] for i in payloads], description, sender=tester)
     proposalID = tx.events[0]["proposalId"]
     print(f"proposal {proposalID} created")
-    print(f"State: {DAO.state(proposalID)}")
 
     delay = DAO.votingDelay()
     print(f"Skipping {timedelta(seconds=delay +1)}")
-    print(f"State: {DAO.state(proposalID)}")
     chain.pending_timestamp += delay+1
     DAO.castVote(proposalID, 1, sender=tester)
     print("vote mocked")
 
     period = DAO.votingPeriod()
     print(f"Skipping {timedelta(seconds=period +1)}")
-    print(f"State: {DAO.state(proposalID)}")
     chain.pending_timestamp += period+1
     DAO.queue([i["target"] for i in payloads], [i["value"] for i in payloads], [i["payload"] for i in payloads], description_hash, sender=tester)
     print("proposal queued")
-    print(f"State: {DAO.state(proposalID)}")
 
     timelock = Contract(DAO.timelock()).getMinDelay()
     print(f"Skipping {timedelta(seconds=timelock+1)}")
-    print(f"State: {DAO.state(proposalID)}")
     chain.pending_timestamp += timelock+1
     DAO.execute([i["target"] for i in payloads], [i["value"] for i in payloads], [i["payload"] for i in payloads], description_hash, sender=tester)
     print("proposal executed")
-    print(f"State: {DAO.state(proposalID)}")
 
     return proposalID
 
@@ -125,10 +119,11 @@ def progress_proposal(DAO, payloads, description, sender):
 
 
 @click.command()
-@click.option('--use-account', default=False, help='wether to use your ape account')
-@click.option('--skip-test', default=False, help='wether to skip tests')
+@click.option('--no-account', is_flag=True, help='wether to use your ape account')
+@click.option('--skip-test', is_flag=True, help='wether to skip tests')
+@click.option('--deploy', is_flag=True, help='wether to deploy&progress')
 @click.argument('proposal')
-def cli(use_account, skip_test, proposal):
+def cli(no_account, skip_test, deploy, proposal):
 
     with networks.ethereum.mainnet.use_provider("node"):
         DAO, payloads, description = proposals[proposal]()
@@ -143,10 +138,11 @@ def cli(use_account, skip_test, proposal):
                 print("State after:")
                 print_gov_delay(DAO)
 
-        if use_account:
-            account = select_account("Select an account to use")
-        else:
-            account = None
+        if deploy:
+            if no_account:
+                account = None
+            else:
+                account = select_account("Select an account to use")
 
-        progress_proposal(DAO, payloads, description, account)
+            progress_proposal(DAO, payloads, description, account)
 
