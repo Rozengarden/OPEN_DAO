@@ -22,9 +22,13 @@ def setAllDelayTo24H():
             ]
 
     description =  """# Make vote long again
+
 While some people complain the governanc is a slow process, 7h from proposal to execution is a bit too fast
 
-As such this proposal will set the voting delay, voting period and execution delay to last 1 day each."""
+As such this proposal will set the voting delay, voting period and execution delay to last 1 day each.
+
+See https://github.com/Rozengarden/OPEN_DAO/blob/ab2d5c7ed79ce8104c011a06c6473511bc2b1d8e/scripts/proposals.py for implementation"""
+
     return DAO, payloads, description
 
 proposals = {"setAllDelayTo24H": setAllDelayTo24H}
