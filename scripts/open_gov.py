@@ -13,17 +13,44 @@ Data: 0x{calldata.hex()}
 Value: {value}
 """)
 
-def print_gov_delay(DAO):
+def print_gov_state(DAO):
     delay = DAO.votingDelay()
     period = DAO.votingPeriod()
     timelock = Contract(DAO.timelock()).getMinDelay()
+    threshold = DAO.proposalThreshold()/Contract(DAO.token()).totalSupply()
+    quorum = DAO.quorumNumerator()/DAO.quorumDenominator()
+
     print(
 f"""
-Governance delay ({DAO.address}):
+Governance state ({DAO.address}):
     Voting Delay: {timedelta(seconds=delay)}
     Voting Period: {timedelta(seconds=period)}
     Execution Delay: {timedelta(seconds=timelock)}
+    Proposal Threshold: {threshold*100}%
+    Proposal Quorum: {quorum*100}%
 """)
+
+def get_gov_state(DAO):
+    state = {
+                "DAO": DAO.address,
+                "Voting Delay": DAO.votingDelay(),
+                "Voting Period": DAO.votingPeriod(),
+                "Execution Delay": Contract(DAO.timelock()).getMinDelay(),
+                "Proposal Threshold": DAO.proposalThreshold()/Contract(DAO.token()).totalSupply(),
+                "Proposal Quorum": DAO.quorumNumerator()/DAO.quorumDenominator(),
+            }
+    return state
+
+def print_state_diff(pre, post):
+    print(f"State diff for Governance ({pre['DAO']}):")
+    for k in pre.keys():
+        if pre[k] != post[k]:
+            if k in ["Voting Delay", "Voting Period", "Execution Delay"]:
+                print(f"\t{k}: {timedelta(seconds=pre[k])}\n\t\t-> {timedelta(seconds=post[k])}")
+            elif k in ["Proposal Threshold", "Proposal Quorum"]:
+                print(f"\t{k}: {pre[k]*100}%\n\t\t-> {post[k]*100}%")
+            else:
+                print(f"\t{k}: {pre[k]}\n\t\t-> {post[k]}")
 
 def test_proposal(DAO, payloads, description, tester):
     tester.balance += int(1e18)
@@ -129,14 +156,13 @@ def cli(no_account, skip_test, deploy, proposal):
         DAO, payloads, description = proposals[proposal]()
 
         if not skip_test:
-            print("State before:")
-            print_gov_delay(DAO)
+            pre = get_gov_state(DAO)
 
             with networks.ethereum.mainnet_fork.use_provider("foundry"):
                 test_proposal(DAO, payloads, description, accounts["0x81f9B40Dee106a4C5822aED7641D5C1e2B40F922"])
 
-                print("State after:")
-                print_gov_delay(DAO)
+                post = get_gov_state(DAO)
+                print_state_diff(pre, post)
 
         if deploy:
             if no_account:

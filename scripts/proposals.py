@@ -49,24 +49,32 @@ def set_vlDAO_Delays():
                     "value": 0,
                     "payload": ab.vl_DAO_timelock.updateDelay.encode_input(2 * 24 * 60 * 60),
                 }, # set execution delay to 2 day (2*24*60*60 seconds)
+                {
+                    "target": ab.vl_DAO,
+                    "value": 0,
+                    "payload": ab.vl_DAO.setProposalThreshold.encode_input(int(1e16)),
+                }, # set execution delay to 2 day (2*24*60*60 seconds)
+                
             ]
 
-    description =  """# Adjust the vlDAO delays
+    description =  """# Adjust the vlDAO delays and threshold
 
-> target: vlDAO
+> target: [DAO Governance](https://etherscan.io/address/0x34a5fac531a7576d22df18d6cac89478f5688d90)
 
 Currently the vlDAO can expediate a vote in 7h. Which is both a risk of governance attack and a problem to coordinate voters (see the [first ever proposal on this DAO who collected 0 votes](https://app.reserve.org/ethereum/index-dtf/0x323c03c48660fe31186fa82c289b0766d331ce21/governance/proposal/26436857730956334062589037166126567845454062707908893165812112571719833847097) )
 
 As such this proposal will set the voting delay to two day, the voting period to three day and the execution delay to last two day for the vlDAO.
+Moreover to lower the risk of proposal spam this proposal will set the threshold to create a proposal to 1% (With the current number of stacked token this represent ~4k vlSQUILL or a bit less than 1500$) 
 
 ## TL;DR:
 
 **vlDAO:**
-| Parameter       | Before  | After  |
-| --------------- | ------- | ------ |
-| voting delay    | 2 hours | 2 days |
-| voting period   | 3 hours | 3 days |
-| execution delay | 2 hours | 2 days |
+| Parameter          | Before  | After  |
+| ------------------ | ------- | ------ |
+| voting delay       | 2 hours | 2 days |
+| voting period      | 3 hours | 3 days |
+| execution delay    | 2 hours | 2 days |
+| proposal threshold | 0.01%   | 1%     |
 
 See https://github.com/Rozengarden/OPEN_DAO/blob/main/scripts/proposals.py for implementation"""
 
