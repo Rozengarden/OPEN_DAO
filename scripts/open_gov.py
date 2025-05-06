@@ -4,6 +4,7 @@ from eth_utils import keccak
 from datetime import timedelta
 from scripts.proposals import proposals
 import click
+from ape.cli import select_account
 
 def print_raw_tx(address, calldata, value):
     print(f"""
