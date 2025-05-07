@@ -85,11 +85,14 @@ def progress_proposal(DAO, payloads, description, sender):
     progressed = False
     description_hash = keccak(bytes(description, 'utf-8'))
     proposalID = DAO.hashProposal([i["target"] for i in payloads], [i["value"] for i in payloads], [i["payload"] for i in payloads], description_hash)
-    state = DAO.proposalSnapshot(proposalID)
-    if (state != 0): state = DAO.state(proposalID) # idealy I would just querry state and try catch the revert if proposal not created and assign 0 to state
+    snapshot = DAO.proposalSnapshot(proposalID)
+    if snapshot == 0:
+        state = -1
+    else:
+        state = DAO.state(proposalID) # idealy I would just querry state and try catch the revert if proposal not created and assign -1 to state
 
     match state: # as defined by OZ 5.1.0 in IGovernor
-        case 0: # not created
+        case -1: # not created
             print(f"Creating proposal {proposalID}")
             if sender is not None:
                 DAO.propose([i["target"] for i in payloads], [i["value"] for i in payloads], [i["payload"] for i in payloads], description, sender=sender)
@@ -101,16 +104,16 @@ def progress_proposal(DAO, payloads, description, sender):
                     )
             progressed = True
 
-        case 1: # Pending
+        case 0: # Pending
             print("Pre voting delay in progress, please wait")
 
-        case 2: # Active
+        case 1: # Active
             print("Voting in progress, please wait")
 
-        case 3 | 4: # Canceled or Defeated
+        case 2 | 3: # Canceled or Defeated
             print("proposal either defeated or canceled")
 
-        case 5: # Succeeded
+        case 4: # Succeeded
             print(f"Queueing proposal {proposalID}")
             if sender is not None:
                 DAO.queue([i["target"] for i in payloads], [i["value"] for i in payloads], [i["payload"] for i in payloads], description_hash, sender=sender)
@@ -122,7 +125,7 @@ def progress_proposal(DAO, payloads, description, sender):
                     )
             progressed = True
 
-        case 6: # Queued
+        case 5: # Queued
             if Contract(DAO.timelock()).isOperationReady():
                 print(f"Executing proposal {proposalID}")
                 if sender is not None:
@@ -137,10 +140,10 @@ def progress_proposal(DAO, payloads, description, sender):
                 print("Proposal still in timelock")
             progressed = True
 
-        case 7: # Expired
+        case 6: # Expired
             print("Proposal expired, there is nothing to do")
 
-        case 8: # Executed
+        case 7: # Executed
             print("Proposal already executed, there is nothing to do")
 
     return progressed
